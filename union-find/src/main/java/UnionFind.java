@@ -1,18 +1,20 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static java.lang.System.out;
 
 
 public class UnionFind {
 
-    List<List<Integer>> components;
+    private int n;
+    private int[] ind;
 
     private UnionFind() {
 
+    }
+
+    private UnionFind(int n) {
+        this.n = n;
     }
 
     public static void main(String[] args) throws IOException {
@@ -20,8 +22,8 @@ public class UnionFind {
         Scanner in = new Scanner(System.in);
         int n = in.nextInt();
         UnionFind unionFind = UnionFind.init(n);
+        out.println("Current state: " + unionFind.toString());
         while (true) {
-            out.println("Current state: " + unionFind.toString());
             out.println("Put A: ");
             int a = in.nextInt();
             out.println("Put B: ");
@@ -33,64 +35,64 @@ public class UnionFind {
             }
         }
 
+
     }
 
     //initialize union-find data structure with N objects (0 to N – 1)
     public static UnionFind init(int n) {
-        UnionFind unionFind = new UnionFind();
-        unionFind.components = new ArrayList<>();
-        out.println("Before  " + unionFind.toString());
-        for (int i = 0; i < n; i++) {
-            ArrayList<Integer> iArr = new ArrayList<>();
-            iArr.add(i);
-            unionFind.components.add(iArr);
-            out.println("i=" + i + ":    " + unionFind.toString());
-        }
-        out.println("After   " + unionFind.toString());
+        UnionFind unionFind = new UnionFind(n);
 
+        unionFind.ind = new int[n];
+        for (int i = 0; i < n; i++) {
+            unionFind.ind[i] = i;
+        }
         return unionFind;
     }
 
     //add connection between p and q
     public void union(int p, int q) {
-        List<Integer> c2 = components.stream()
-                .filter(b -> b.contains(q))
-                .filter(b -> !b.contains(p))
-                .findFirst().orElse(Collections.emptyList());
-
-        components.stream()
-                .filter(c1 -> c1.contains(p))
-                .findFirst()
-                .ifPresent(c -> c.addAll(c2));
-
-        components.remove(c2);
-
+        ind[q] = p;
+        for (int i = 0; i < n; i++) {
+            if (ind[i] == q) {
+                ind[i] = p;
+            }
+        }
     }
 
     //are p and q in the same component?
     public boolean connected(int p, int q) {
-        return components.stream()
-                .anyMatch(b -> (b.contains(p) && b.contains(q)));
+        return ind[p] == ind[q];
     }
 
     //component identifier for p (0 to N – 1)
     public int find(int p) {
-        for (int i = 0; i < count(); i++) {
-            if (components.get(i).contains(p)) {
-                return i;
-            }
-        }
-        ;
-        return -1;
+        return ind[p];
     }
 
     //number of components
     public int count() {
-        return components.size();
+        return getInverseIndexes().size();
+    }
+
+    public Map<Integer, List<Integer>> getInverseIndexes() {
+        Map<Integer, List<Integer>> inverseIndexes = new HashMap<>();
+        for (int i = 0; i < ind.length; i++) {
+            int index = ind[i];
+            if(inverseIndexes.containsKey(index)) {
+                inverseIndexes.get(index).add(i);
+            } else {
+                List<Integer> values = new ArrayList<>();
+                values.add(i);
+                inverseIndexes.put(index, values);
+            }
+        }
+        return inverseIndexes;
     }
 
     @Override
     public String toString() {
-        return "Size = " + this.count() + "\n" + components.toString();
+        return "Size =" + count() + "\n" +
+                "Array: " + Arrays.toString(ind) + "\n" +
+                "Map: " + getInverseIndexes();
     }
 }
